@@ -75,7 +75,6 @@ def getpath(filename):
     return os.path.join(dir1, filename_)
 
 def main():
-    print(sys.argv)
     if len(sys.argv) != 2:
         print('Error: Missing path option. Usage: python3 remove-duplicates.py [directory path]')
         exit()
