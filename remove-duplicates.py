@@ -11,8 +11,13 @@ class bcolors:
     OKCYAN = '\033[96m'
     ENDC = '\033[0m'
 
+fileCount = 0
+dirCount = 0
+
 def analyseDir(dir_stack):
     while dir_stack:
+        global dirCount
+        dirCount += 1
         directory = dir_stack.pop()
         print(f'{bcolors.WARNING}DIRECTORY: {bcolors.ENDC}' + directory)
         fileSizes = calculateFileSizes(directory, dir_stack)
@@ -31,6 +36,8 @@ def calculateFileSizes(directory, dir_stack):
             continue
         if os.path.islink(path):
             continue
+        global fileCount
+        fileCount += 1
         fileSize = os.path.getsize(path)
         if fileSize in fileSizes:
             fileSizes[fileSize].append(path)
@@ -101,6 +108,8 @@ def main():
         exit()
     dir_stack = [sys.argv[1]]
     analyseDir(dir_stack)
+    print(str(dirCount) + ' directories traversed')
+    print(str(fileCount) + ' files checked')
     
 if __name__ == "__main__":
     main()
