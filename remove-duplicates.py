@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os
 import hashlib
 import sys
@@ -6,14 +8,28 @@ class bcolors:
     OKGREEN = '\033[92m'
     WARNING = '\033[93m'
     FAIL = '\033[91m'
+    OKCYAN = '\033[96m'
     ENDC = '\033[0m'
 
-def calculateFileSizes(directory):
+def analyseDir(dir_stack):
+    while dir_stack:
+        directory = dir_stack.pop()
+        print(f'{bcolors.WARNING}DIRECTORY: {bcolors.ENDC}' + directory)
+        fileSizes = calculateFileSizes(directory, dir_stack)
+        fileHashes1k = get1kHashes(fileSizes)
+        fullHashes = getFullHashes(fileHashes1k)
+        removed = removeDuplicates(fullHashes)
+        print(f'{bcolors.OKCYAN}Removed ' + str(removed) + ' duplicates from ' + directory + f'{bcolors.ENDC}')
+        print('-' * 200)
+
+def calculateFileSizes(directory, dir_stack):
     fileSizes = {}
     for filename in os.listdir(directory):
         path = os.path.join(directory, filename)
         if os.path.isdir(path):
-            print(f'{bcolors.WARNING}DIRECTORY: {bcolors.ENDC}' + path + ' is a directory, skipping...')
+            dir_stack.append(path)
+            continue
+        if os.path.islink(path):
             continue
         fileSize = os.path.getsize(path)
         if fileSize in fileSizes:
@@ -64,6 +80,7 @@ def hash(filename):
         return sha1.hexdigest()
 
 def removeDuplicates(hashes):
+    removeCount = 0
     for filehash, files in hashes.items():
         if len(files) <= 1:  
             print(f'{bcolors.OKGREEN}UNIQUE: {bcolors.ENDC}' + files[0] + ' no identical full hash found.')
@@ -71,7 +88,9 @@ def removeDuplicates(hashes):
         filename = files[0]
         for path in files[1:]:
             print(f'{bcolors.FAIL}DUPLICATE: {bcolors.ENDC}' + path + ' identical to ' + filename + '. Deleting...')
-            os.remove(path)
+            removeCount += 1
+            # os.remove(path)
+    return removeCount
 
 def main():
     if len(sys.argv) != 2:
@@ -80,12 +99,9 @@ def main():
     if not os.path.exists(sys.argv[1]):
         print('Error: ' + sys.argv[1] + ' is not a valid directory')
         exit()
-    fileSizes = calculateFileSizes(sys.argv[1])
-    fileHashes1k = get1kHashes(fileSizes)
-    fullHashes = getFullHashes(fileHashes1k)
-    removeDuplicates(fullHashes)
+    dir_stack = [sys.argv[1]]
+    analyseDir(dir_stack)
     
-
 if __name__ == "__main__":
     main()
 
