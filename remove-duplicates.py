@@ -12,6 +12,9 @@ def calculateFileSizes(directory):
     fileSizes = {}
     for filename in os.listdir(directory):
         path = os.path.join(directory, filename)
+        if os.path.isdir(path):
+            print(f'{bcolors.WARNING}DIRECTORY: {bcolors.ENDC}' + path + ' is a directory, skipping...')
+            continue
         fileSize = os.path.getsize(path)
         if fileSize in fileSizes:
             fileSizes[fileSize].append(path)
