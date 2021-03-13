@@ -4,7 +4,7 @@ from shutil import copyfile
 
 dir1 = 'Folder 1 Surplus'
 dir2 = 'Folder 2 Deficit'
-destinationDirectory = 'merged'
+destinationDirectory = 'Folder 1 Surplus'
 
 class bcolors:
     HEADER = '\033[95m'
