@@ -26,10 +26,10 @@ def get1kHashes(fileSizes):
             print(f'{bcolors.OKGREEN}UNIQUE: {bcolors.ENDC}' + files[0] + ' no identical filesize found.')
             continue
         for filename in files:
-            md5 = hashlib.md5()
+            sha1 = hashlib.sha1()
             with open(filename, 'rb') as f:
-                md5.update(f.read(1024))
-                hash1k = md5.hexdigest()
+                sha1.update(f.read(1024))
+                hash1k = sha1.hexdigest()
                 if hash1k in hashes1k:
                     hashes1k[hash1k].append(filename)
                 else:
@@ -52,13 +52,13 @@ def getFullHashes(hashes1k):
 
 def hash(filename):
     BLOCKSIZE = 65536
-    md5 = hashlib.md5()
+    sha1 = hashlib.sha1()
     with open(filename, 'rb') as f:
         data = f.read(BLOCKSIZE)
         while len(data) > 0:
-            md5.update(data)
+            sha1.update(data)
             data = f.read(BLOCKSIZE)
-        return md5.hexdigest()
+        return sha1.hexdigest()
 
 def removeDuplicates(hashes):
     for filehash, files in hashes.items():
@@ -69,10 +69,6 @@ def removeDuplicates(hashes):
         for path in files[1:]:
             print(f'{bcolors.FAIL}DUPLICATE: {bcolors.ENDC}' + path + ' identical to ' + filename + '. Deleting...')
             os.remove(path)
-
-def getpath(filename):
-    path, filename_ = os.path.split(filename)
-    return os.path.join(dir1, filename_)
 
 def main():
     if len(sys.argv) != 2:
