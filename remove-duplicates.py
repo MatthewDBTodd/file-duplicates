@@ -15,6 +15,7 @@ fileCount = 0
 dirCount = 0
 dupCount = 0
 bytesFreed = 0
+totalByteCount = 0
 
 def analyseDir(dir_stack):
     while dir_stack:
@@ -44,6 +45,8 @@ def calculateFileSizes(directory, dir_stack):
         global fileCount
         fileCount += 1
         fileSize = os.path.getsize(path)
+        global totalByteCount
+        totalByteCount += fileSize
         if fileSize in fileSizes:
             fileSizes[fileSize].append(path)
         else:
@@ -129,9 +132,10 @@ def main():
         exit()
     dir_stack = [sys.argv[1]]
     analyseDir(dir_stack)
-    print(str(dirCount) + ' directories traversed')
-    print(str(fileCount) + ' files checked')
-    print(str(dupCount) + ' duplicates found')
+    print(f'{dirCount:,d} directories traversed')
+    print(format_bytecount(totalByteCount) + ' total space checked')
+    print(f'{fileCount:,d} files checked')
+    print(f'{dupCount:,d} duplicates found')
     print(format_bytecount(bytesFreed) + ' space freed')
     print('')
     
