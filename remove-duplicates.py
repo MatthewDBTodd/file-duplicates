@@ -28,7 +28,8 @@ def analyseDir(dir_stack):
         removed = removeDuplicates(fullHashes)
         global dupCount
         dupCount += removed
-        print(f'{bcolors.OKCYAN}Removed ' + str(removed) + ' duplicates from ' + directory + f'{bcolors.ENDC}')
+        print(f'{bcolors.OKCYAN}Removed ' + str(removed) + ' duplicates from ' + 
+        directory + f'{bcolors.ENDC}')
         print('-' * 200)
 
 def calculateFileSizes(directory, dir_stack):
@@ -53,7 +54,8 @@ def get1kHashes(fileSizes):
     hashes1k = {}
     for size, files in fileSizes.items():
         if len(files) <= 1:
-            print(f'{bcolors.OKGREEN}UNIQUE: {bcolors.ENDC}' + files[0] + ' no identical filesize found.')
+            print(f'{bcolors.OKGREEN}UNIQUE: {bcolors.ENDC}' + files[0] + 
+            ' no identical filesize found.')
             continue
         for filename in files:
             sha1 = hashlib.sha1()
@@ -70,7 +72,8 @@ def getFullHashes(hashes1k):
     hashes = {}
     for hash1k, files in hashes1k.items():
         if len(files) <= 1:
-            print(f'{bcolors.OKGREEN}UNIQUE: {bcolors.ENDC}' + files[0] + ' no identical 1k hash found.')
+            print(f'{bcolors.OKGREEN}UNIQUE: {bcolors.ENDC}' + files[0] + 
+            ' no identical 1k hash found.')
             continue
         for filename in files:
             filehash = hash(filename)
@@ -94,18 +97,21 @@ def removeDuplicates(hashes):
     removeCount = 0
     for filehash, files in hashes.items():
         if len(files) <= 1:  
-            print(f'{bcolors.OKGREEN}UNIQUE: {bcolors.ENDC}' + files[0] + ' no identical full hash found.')
+            print(f'{bcolors.OKGREEN}UNIQUE: {bcolors.ENDC}' + files[0] + 
+            ' no identical full hash found.')
             continue
         filename = files[0]
         for path in files[1:]:
-            print(f'{bcolors.FAIL}DUPLICATE: {bcolors.ENDC}' + path + ' identical to ' + filename + '. Deleting...')
+            print(f'{bcolors.FAIL}DUPLICATE: {bcolors.ENDC}' + path + 
+            ' identical to ' + filename + '. Deleting...')
             global bytesFreed
             bytesFreed += os.path.getsize(path)
             removeCount += 1
             # os.remove(path)
     return removeCount
 
-# Credit - Fred Cirera at https://web.archive.org/web/20111010015624/http://blogmag.net/blog/read/38/Print_human_readable_file_size
+# Credit - Fred Cirera at: 
+# https://web.archive.org/web/20111010015624/http://blogmag.net/blog/read/38/Print_human_readable_file_size
 def format_bytecount(bytecount):
     for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
         if abs(bytecount) < 1024.0:
@@ -115,7 +121,8 @@ def format_bytecount(bytecount):
 
 def main():
     if len(sys.argv) != 2:
-        print('Error: Missing path option. Usage: python3 remove-duplicates.py [directory path]')
+        print('Error: Missing path option. Usage: python3 ' +
+        'remove-duplicates.py [directory path]')
         exit()
     if not os.path.exists(sys.argv[1]):
         print('Error: ' + sys.argv[1] + ' is not a valid directory')
