@@ -13,6 +13,8 @@ class bcolors:
 
 fileCount = 0
 dirCount = 0
+dupCount = 0
+bytesFreed = 0
 
 def analyseDir(dir_stack):
     while dir_stack:
@@ -24,6 +26,8 @@ def analyseDir(dir_stack):
         fileHashes1k = get1kHashes(fileSizes)
         fullHashes = getFullHashes(fileHashes1k)
         removed = removeDuplicates(fullHashes)
+        global dupCount
+        dupCount += removed
         print(f'{bcolors.OKCYAN}Removed ' + str(removed) + ' duplicates from ' + directory + f'{bcolors.ENDC}')
         print('-' * 200)
 
@@ -95,9 +99,19 @@ def removeDuplicates(hashes):
         filename = files[0]
         for path in files[1:]:
             print(f'{bcolors.FAIL}DUPLICATE: {bcolors.ENDC}' + path + ' identical to ' + filename + '. Deleting...')
+            global bytesFreed
+            bytesFreed += os.path.getsize(path)
             removeCount += 1
             # os.remove(path)
     return removeCount
+
+# Credit - Fred Cirera at https://web.archive.org/web/20111010015624/http://blogmag.net/blog/read/38/Print_human_readable_file_size
+def format_bytecount(bytecount):
+    for unit in ['', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi']:
+        if abs(bytecount) < 1024.0:
+            return '%3.1f%s%s' % (bytecount, unit, 'B')
+        bytecount /= 1024.0
+    return '%.1f%s%s' % (bytecount, 'Yi', 'B')
 
 def main():
     if len(sys.argv) != 2:
@@ -110,6 +124,9 @@ def main():
     analyseDir(dir_stack)
     print(str(dirCount) + ' directories traversed')
     print(str(fileCount) + ' files checked')
+    print(str(dupCount) + ' duplicates found')
+    print(format_bytecount(bytesFreed) + ' space freed')
+    print('')
     
 if __name__ == "__main__":
     main()
