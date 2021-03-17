@@ -16,6 +16,7 @@ dirCount = 0
 dupCount = 0
 bytesFreed = 0
 totalByteCount = 0
+recursive = False
 
 def analyseDir(dir_stack):
     while dir_stack:
@@ -23,22 +24,25 @@ def analyseDir(dir_stack):
         dirCount += 1
         directory = dir_stack.pop()
         print(f'{bcolors.WARNING}DIRECTORY: {bcolors.ENDC}' + directory)
+        print('')
         fileSizes = calculateFileSizes(directory, dir_stack)
         fileHashes1k = get1kHashes(fileSizes)
         fullHashes = getFullHashes(fileHashes1k)
         removed = removeDuplicates(fullHashes)
         global dupCount
         dupCount += removed
-        print(f'{bcolors.OKCYAN}Removed ' + str(removed) + ' duplicates from ' + 
-        directory + f'{bcolors.ENDC}')
-        print('-' * 200)
+        if removed > 0:
+            print(f'{bcolors.OKCYAN}Removed ' + str(removed) + ' duplicates from ' + 
+            directory + f'{bcolors.ENDC}')
+        print('-' * 120)
 
 def calculateFileSizes(directory, dir_stack):
     fileSizes = {}
     for filename in os.listdir(directory):
         path = os.path.join(directory, filename)
         if os.path.isdir(path):
-            dir_stack.append(path)
+            if recursive:
+                dir_stack.append(path)
             continue
         if os.path.islink(path):
             continue
@@ -57,8 +61,9 @@ def get1kHashes(fileSizes):
     hashes1k = {}
     for size, files in fileSizes.items():
         if len(files) <= 1:
-            print(f'{bcolors.OKGREEN}UNIQUE: {bcolors.ENDC}' + files[0] + 
-            ' no identical filesize found.')
+            filename = extract_filename(files[0])
+            print(f'{bcolors.OKGREEN}UNIQUE: {bcolors.ENDC}' + filename + 
+            ' is unique.')
             continue
         for filename in files:
             sha1 = hashlib.sha1()
@@ -75,8 +80,9 @@ def getFullHashes(hashes1k):
     hashes = {}
     for hash1k, files in hashes1k.items():
         if len(files) <= 1:
-            print(f'{bcolors.OKGREEN}UNIQUE: {bcolors.ENDC}' + files[0] + 
-            ' no identical 1k hash found.')
+            filename = extract_filename(files[0])
+            print(f'{bcolors.OKGREEN}UNIQUE: {bcolors.ENDC}' + filename + 
+            ' is unique.')
             continue
         for filename in files:
             filehash = hash(filename)
@@ -100,18 +106,24 @@ def removeDuplicates(hashes):
     removeCount = 0
     for filehash, files in hashes.items():
         if len(files) <= 1:  
-            print(f'{bcolors.OKGREEN}UNIQUE: {bcolors.ENDC}' + files[0] + 
-            ' no identical full hash found.')
+            filename = extract_filename(files[0])
+            print(f'{bcolors.OKGREEN}UNIQUE: {bcolors.ENDC}' + filename + 
+            ' is unique.')
             continue
-        filename = files[0]
+        filename = extract_filename(files[0])
         for path in files[1:]:
-            print(f'{bcolors.FAIL}DUPLICATE: {bcolors.ENDC}' + path + 
+            dfilename = extract_filename(path)
+            print(f'{bcolors.FAIL}DUPLICATE: {bcolors.ENDC}' + dfilename + 
             ' identical to ' + filename + '. Deleting...')
             global bytesFreed
             bytesFreed += os.path.getsize(path)
             removeCount += 1
             # os.remove(path)
     return removeCount
+
+def extract_filename(path):
+    path, filename = os.path.split(path)
+    return filename
 
 # Credit - Fred Cirera at: 
 # https://web.archive.org/web/20111010015624/http://blogmag.net/blog/read/38/Print_human_readable_file_size
@@ -122,15 +134,26 @@ def format_bytecount(bytecount):
         bytecount /= 1024.0
     return '%.1f%s%s' % (bytecount, 'Yi', 'B')
 
-def main():
-    if len(sys.argv) != 2:
+def parse_args(args):
+    directory = ''
+    for arg in args:
+        if arg == '-r':
+            global recursive
+            recursive = True
+        else:
+            if not os.path.exists(arg):
+                print('Error: ' + arg + ' is not a valid directory')
+                exit()
+            directory = arg
+    if directory == '':
         print('Error: Missing path option. Usage: python3 ' +
         'remove-duplicates.py [directory path]')
         exit()
-    if not os.path.exists(sys.argv[1]):
-        print('Error: ' + sys.argv[1] + ' is not a valid directory')
-        exit()
-    dir_stack = [sys.argv[1]]
+    return directory
+
+def main():
+    directory = parse_args(sys.argv[1:])
+    dir_stack = [directory]
     analyseDir(dir_stack)
     print(f'{dirCount:,d} directories traversed')
     print(format_bytecount(totalByteCount) + ' total space checked')
